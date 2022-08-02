@@ -96,8 +96,12 @@ VectorXd allocateTime(const MatrixXd &wayPs,
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "example1_node");
-    ros::NodeHandle nh_;
+    ros::NodeHandle nh_("~");
     ros::Publisher mpc_ref_pub;
+
+    int opt_method = 0;  // 0 for minimun jerk, 1 for minimun snap
+    opt_method = nh_.param("opt_method", 0);
+    std::cout << opt_method << std::endl;
     mpc_ref_pub = nh_.advertise<quadrotor_msgs::mpc_ref_traj> ("/mpc_ref_traj", 1);
 
     // RandomRouteGenerator routeGen(Array3d(-16, -16, -16), Array3d(16, 16, 16));

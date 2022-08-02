@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <launch>
     <node pkg="traj_tools" type="traj_tools_node" name="example1" output="screen">
+      <param name="opt_method" type="int" value="1" />
+      <!-- 1 for minimum snap, 0 for minimum jerk. -->
     </node>
 </launch>
