@@ -1,0 +1,5 @@
+rostopic pub /goal geometry_msgs/PoseStamped \ '{header: {frame_id: "map"},pose:{position:{x: 0,y: 0,z: 0}}}'
+
+
+
+380.4945983886719, 0.0, 317.669189453125, 0.0, 380.4945983886719, 238.01617431640625, 0.0, 0.0, 1.0

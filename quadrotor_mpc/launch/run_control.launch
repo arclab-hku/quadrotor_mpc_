@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+ 
+  <!-- parameter files -->
+  <arg name="ros_param_file" default="$(find uav_mpc)/config/mpc_para.yaml"/>
+ 
+  <rosparam command="load" file="$(arg ros_param_file)"/>
+  <!-- Start darknet and ros wrapper -->
+  <node pkg="uav_mpc" type="mpc_node" name="mpc_node" output="screen" >
+  </node>
+  
+  
+</launch>
