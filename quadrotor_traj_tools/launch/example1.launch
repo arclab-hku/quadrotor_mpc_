@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<launch>
-    <node pkg="traj_tools" type="traj_tools_node" name="example1" output="screen">
-    </node>
-</launch>
