@@ -222,6 +222,10 @@ int main(int argc, char **argv)
         mpc_traj.mpc_ref_points.push_back(mpc_point);
       }
 
+      mpc_traj.goal.x = 9;
+      mpc_traj.goal.y = 0;
+      mpc_traj.goal.z = 2;
+
       mpc_ref_pub.publish(mpc_traj);
 
       ros::spinOnce();
