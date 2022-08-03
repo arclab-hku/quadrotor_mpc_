@@ -183,7 +183,6 @@ void MPCRos::state_Callback(const mavros_msgs::State::ConstPtr& msg)
 
 void MPCRos::traj_Callback(const quadrotor_msgs::mpc_ref_traj::ConstPtr& msg)
 {
-  ROS_INFO("Trajectory Recieved");
   traj_msg = *msg;
 
   goal << msg->goal.x, msg->goal.y, msg->goal.z;
@@ -192,6 +191,7 @@ void MPCRos::traj_Callback(const quadrotor_msgs::mpc_ref_traj::ConstPtr& msg)
   {
     mpc_mode = AUTO_TRACKING;
     fsm_switch = 1;
+    ROS_INFO("Trajectory Recieved");
   }
 }
 
@@ -220,7 +220,7 @@ void MPCRos::getTrajRef()
     last_yaw = yaw;
     last_px = next_px;
     last_py = next_py;
-    acc << point.acceleration.x, point.acceleration.y, point.acceleration.z - 9.8066;
+    acc << point.acceleration.x, point.acceleration.y, point.acceleration.z + 9.8066;
     acc2quaternion(acc, yaw, quat);
     // ref
     reference.col(k).setZero();
