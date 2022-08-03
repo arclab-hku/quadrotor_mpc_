@@ -2,7 +2,7 @@
 
 <launch>
     <node pkg="traj_tools" type="traj_tools_node" name="example1" output="screen">
-      <param name="opt_method" type="int" value="1" />
+      <param name="opt_method" type="int" value="0" />
       <!-- 1 for minimum snap, 0 for minimum jerk. -->
     </node>
 </launch>

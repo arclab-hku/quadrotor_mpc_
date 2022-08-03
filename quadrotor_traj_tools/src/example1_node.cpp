@@ -123,6 +123,7 @@ int main(int argc, char **argv)
 
     std::chrono::high_resolution_clock::time_point tc0, tc1, tc2;
     double d0, d1;
+    double t_duration;
 
     d0 = d1 = 0.0;
     // route = routeGen.generate(3);
@@ -138,28 +139,36 @@ int main(int argc, char **argv)
     iSS << iS, Eigen::MatrixXd::Zero(3, 1);
     fSS << fS, Eigen::MatrixXd::Zero(3, 1);
 
-    tc0 = std::chrono::high_resolution_clock::now();
-    jerkOpt.reset(iS, fS, route.cols() - 1);
-    jerkOpt.generate(route.block(0, 1, 3, 3 - 1), ts);
-    jerkOpt.getTraj(minJerkTraj);
-    tc1 = std::chrono::high_resolution_clock::now();
+    if(opt_method == 0)
+    {
+      tc0 = std::chrono::high_resolution_clock::now();
+      jerkOpt.reset(iS, fS, route.cols() - 1);
+      jerkOpt.generate(route.block(0, 1, 3, 3 - 1), ts);
+      jerkOpt.getTraj(minJerkTraj);
+      t_duration = minJerkTraj.getTotalDuration();
+      tc1 = std::chrono::high_resolution_clock::now();
 
-    d0 += std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count();
+      d0 += std::chrono::duration_cast<std::chrono::duration<double>>(tc1 - tc0).count();
 
-    tc1 = std::chrono::high_resolution_clock::now();
-    snapOpt.reset(iSS, fSS, route.cols() - 1);
-    snapOpt.generate(route.block(0, 1, 3, 3 - 1), ts);
-    snapOpt.getTraj(minSnapTraj);
-    tc2 = std::chrono::high_resolution_clock::now();
+      std::cout << "Piece Number: " << 2
+                << " MinJerk Comp. Time: " << d0  << " s"<< std::endl;
+    }
+    else
+    {
+      tc1 = std::chrono::high_resolution_clock::now();
+      snapOpt.reset(iSS, fSS, route.cols() - 1);
+      snapOpt.generate(route.block(0, 1, 3, 3 - 1), ts);
+      snapOpt.getTraj(minSnapTraj);
+      t_duration = minSnapTraj.getTotalDuration();
+      tc2 = std::chrono::high_resolution_clock::now();
 
-    d1 += std::chrono::duration_cast<std::chrono::duration<double>>(tc2 - tc1).count();
-        
-    std::cout << "Piece Number: " << 2
-              << " MinJerk Comp. Time: " << d0  << " s"
-              << " MinSnap Comp. Time: " << d1  << " s" << std::endl;
+      d1 += std::chrono::duration_cast<std::chrono::duration<double>>(tc2 - tc1).count();
+
+      std::cout << "Piece Number: " << 2
+                << " MinSnap Comp. Time: " << d1  << " s" << std::endl;
+    }
 
     double t = 0;
-    double t_duration = minJerkTraj.getTotalDuration();
     double t_max = 0;
     ros::Time time_start;
     int start = 0;
@@ -182,12 +191,24 @@ int main(int argc, char **argv)
           rt = t_max;
         else
           t_max = rt;
+
         Eigen::Vector3d p;
-        p = minJerkTraj.getPos(rt);
         Eigen::Vector3d v;
-        v = minJerkTraj.getVel(rt);
         Eigen::Vector3d a;
-        a = minJerkTraj.getAcc(rt);
+
+        if(opt_method == 0)
+        {
+          p = minJerkTraj.getPos(rt);
+          v = minJerkTraj.getVel(rt);
+          a = minJerkTraj.getAcc(rt);
+        }
+        else
+        {
+          p = minSnapTraj.getPos(rt);
+          v = minSnapTraj.getVel(rt);
+          a = minSnapTraj.getAcc(rt);
+        }
+
         quadrotor_msgs::mpc_ref_point mpc_point;
         mpc_point.position.x = p[0];
         mpc_point.position.y = p[1];

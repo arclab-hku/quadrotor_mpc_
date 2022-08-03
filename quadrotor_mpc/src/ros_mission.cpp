@@ -201,6 +201,7 @@ void MPCRos::getTrajRef()
   double last_py = current_odom.pose.pose.position.y;
   double next_px, next_py;
   double yaw;
+  double last_yaw = 0;
   Eigen::Vector4d quat;
   Eigen::Vector3d acc;
   int k = 0;
@@ -211,11 +212,12 @@ void MPCRos::getTrajRef()
     next_px = point.position.x;
     next_py = point.position.y;
     if(next_px == last_px && next_py == last_py)
-      yaw = 0;
+      yaw = last_yaw;
     else
       yaw = acos((next_px - last_px)/sqrt((next_px - last_px)*(next_px - last_px) + (next_py - last_py)*(next_py - last_py)));
     if((next_px - last_px)<0)
       yaw = -yaw;
+    last_yaw = yaw;
     last_px = next_px;
     last_py = next_py;
     acc << point.acceleration.x, point.acceleration.y, point.acceleration.z - 9.8066;
@@ -232,18 +234,51 @@ void MPCRos::getTrajRef()
 
 void MPCRos::acc2quaternion(const Eigen::Vector3d &vector_acc, const double &yaw, Eigen::Vector4d &quat) 
 {
-  Eigen::Vector3d zb_des, yb_des, xb_des, proj_xb_des;
-  Eigen::Matrix3d rotmat;
+  Eigen::Vector3d zb_des, yb_des, xb_des, yc;
+  Eigen::Matrix3d R;
 
-  proj_xb_des << std::cos(yaw), std::sin(yaw), 0.0;
-
+  yc = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ())*Eigen::Vector3d::UnitY();
   zb_des = vector_acc / vector_acc.norm();
-  yb_des = zb_des.cross(proj_xb_des) / (zb_des.cross(proj_xb_des)).norm();
-  xb_des = yb_des.cross(zb_des) / (yb_des.cross(zb_des)).norm();
+  xb_des = yc.cross(zb_des) / ( yc.cross(zb_des) ).norm();
+  yb_des = zb_des.cross(xb_des) / (zb_des.cross(xb_des)).norm();
 
-  rotmat << xb_des(0), yb_des(0), zb_des(0), xb_des(1), yb_des(1), zb_des(1), xb_des(2), yb_des(2), zb_des(2);
-  Eigen::Quaterniond quaternion(rotmat);
-  quat = quaternion.coeffs();
+  R << xb_des(0), yb_des(0), zb_des(0), 
+       xb_des(1), yb_des(1), zb_des(1), 
+       xb_des(2), yb_des(2), zb_des(2);
+
+  double tr = R.trace();
+  if (tr > 0.0) 
+  {
+    double S = sqrt(tr + 1.0) * 2.0; // S=4*qw
+    quat[0] = 0.25 * S;
+    quat[1] = (R(2, 1) - R(1, 2)) / S;
+    quat[2] = (R(0, 2) - R(2, 0)) / S;
+    quat[3] = (R(1, 0) - R(0, 1)) / S;
+  } 
+  else if ((R(0, 0) > R(1, 1)) & (R(0, 0) > R(2, 2))) 
+  {
+    double S = sqrt(1.0 + R(0, 0) - R(1, 1) - R(2, 2)) * 2.0; // S=4*qx
+    quat[0] = (R(2, 1) - R(1, 2)) / S;
+    quat[1] = 0.25 * S;
+    quat[2] = (R(0, 1) + R(1, 0)) / S;
+    quat[3] = (R(0, 2) + R(2, 0)) / S;
+  } 
+  else if (R(1, 1) > R(2, 2)) 
+  {
+    double S = sqrt(1.0 + R(1, 1) - R(0, 0) - R(2, 2)) * 2.0; // S=4*qy
+    quat[0] = (R(0, 2) - R(2, 0)) / S;
+    quat[1] = (R(0, 1) + R(1, 0)) / S;
+    quat[2] = 0.25 * S;
+    quat[3] = (R(1, 2) + R(2, 1)) / S;
+  } 
+  else 
+  {
+    double S = sqrt(1.0 + R(2, 2) - R(0, 0) - R(1, 1)) * 2.0; // S=4*qz
+    quat[0] = (R(1, 0) - R(0, 1)) / S;
+    quat[1] = (R(0, 2) + R(2, 0)) / S;
+    quat[2] = (R(1, 2) + R(2, 1)) / S;
+    quat[3] = 0.25 * S;
+  }
 }
 
 bool MPCRos::reachgoal(nav_msgs::Odometry& msg, Eigen::Vector3f& goal)
