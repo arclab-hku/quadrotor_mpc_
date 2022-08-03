@@ -215,8 +215,6 @@ void MPCRos::getTrajRef()
       yaw = last_yaw;
     else
       yaw = acos((next_px - last_px)/sqrt((next_px - last_px)*(next_px - last_px) + (next_py - last_py)*(next_py - last_py)));
-    if((next_px - last_px)<0)
-      yaw = -yaw;
     last_yaw = yaw;
     last_px = next_px;
     last_py = next_py;
